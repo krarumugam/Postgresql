@@ -2,7 +2,8 @@
 --https://www.dbrnd.com/2016/03/postgresql-best-way-for-password-encryption-using-pgcryptos-cryptographic-functions/
 --https://www.postgresql.org/docs/12/pgcrypto.html
 
-
+--https://cloud.google.com/sql/docs/postgres/extensions?hl=it
+--chkpass	Implements a data type chkpass that is designed for storing encrypted passwords. Not supported for PostgreSQL 12 for Cloud SQL.
 
 CREATE EXTENSION chkpass;
 
