@@ -144,6 +144,16 @@ LEFT JOIN
 	ON btj.BTJobID = latest_job_history.BTJobID
 LEFT JOIN [dbo].BTJobHistory AS latest_job_history_Dtls
 ON latest_job_history.BTJobHistoryID = latest_job_history_Dtls.BTJobHistoryID
+LEFT JOIN
+(
+	SELECT 
+		btshcr.BTJobHistoryID AS BTJobHistoryID,
+		MAX(btshcr.BTStatusHistoryCrossRefID) AS BTStatusHistoryCrossRefID
+	FROM [dbo].BTStatusHistoryCrossRef AS btshcr
+	GROUP BY btshcr.BTJobHistoryID
+) AS latest_cross_ref
+ON latest_job_history.BTJobHistoryID = latest_cross_ref.BTJobHistoryID
+/*
 INNER JOIN
 (
 	SELECT
@@ -175,7 +185,18 @@ INNER JOIN
 	LEFT JOIN [dbo].AccessPointType AS apt
 	ON btshcr.AccessPointTypeID = apt.AccessPointTypeID
 ) AS bt_job_source
-ON btj.BTJobID = bt_job_source.BTJobID
+ON btj.BTJobID = bt_job_source.BTJobID*/
+LEFT JOIN
+(
+	SELECT
+		btshcr.BTStatusHistoryCrossRefID AS BTStatusHistoryCrossRefID,
+		apt.[Name] AS AccessPointName
+	FROM [dbo].BTStatusHistoryCrossRef AS btshcr	
+	LEFT JOIN [dbo].AccessPointType AS apt
+	ON btshcr.AccessPointTypeID = apt.AccessPointTypeID
+) AS bt_job_source
+ON latest_cross_ref.BTStatusHistoryCrossRefID = bt_job_source.BTStatusHistoryCrossRefID
+
 /*INNER JOIN
 (
 	SELECT
