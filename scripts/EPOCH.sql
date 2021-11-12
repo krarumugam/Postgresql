@@ -25,3 +25,19 @@ pg_restore -U postgres -d postgres D:\somefilename.tar
 
 psql -u postgres postgres < D:filename.sql
 
+
+
+CREATE FUNCTION public.displayRowValuesArray(int[]) RETURNS void AS $$
+DECLARE
+sampleArray int[];
+BEGIN
+FOREACH sampleArray SLICE 1 IN ARRAY $1
+LOOP
+RAISE NOTICE 'The Row Value is = %', sampleArray;
+END LOOP;
+END;
+--select sample.displayRowValuesArray(Array[[1,2],[3,4],[5,6],[7,8],[9,10],[11,12]]);
+$$ LANGUAGE plpgsql;
+
+
+SELECT public.displayRowValuesArray(Array[[1,2],[3,4],[5,6],[7,8],[9,10],[11,12]]);

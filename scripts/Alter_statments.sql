@@ -1,0 +1,1 @@
+ALTER TABLE ecom.product_brand ALTER COLUMN product_brand_id SET DEFAULT nextval('ecom.product_brand_seq'::regclass);
