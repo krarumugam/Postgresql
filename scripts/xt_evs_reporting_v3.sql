@@ -155,39 +155,6 @@ LEFT JOIN
 	GROUP BY btshcr.BTJobHistoryID
 ) AS latest_cross_ref
 ON latest_job_history.BTJobHistoryID = latest_cross_ref.BTJobHistoryID
-/*
-INNER JOIN
-(
-	SELECT
-		btj.BTJobID,
-		apt.[Name] AS AccessPointName
-	FROM [dbo].BTJob btj
-	INNER JOIN
-	(
-		SELECT
-			btj.BTJobID AS BTJobID,
-			MAX(btjh.BTJobHistoryID) AS BTJobHistoryID
-		FROM [dbo].BTJob AS btj
-		INNER JOIN [dbo].BTJobHistory AS btjh
-		ON btj.BTJobID = btjh.BTJobID
-		GROUP BY btj.BTJobID
-	) AS latest_job_history
-	ON btj.BTJobID = latest_job_history.BTJobID
-	LEFT JOIN
-	(
-		SELECT 
-			btshcr.BTJobHistoryID AS BTJobHistoryID,
-			MAX(btshcr.BTStatusHistoryCrossRefID) AS BTStatusHistoryCrossRefID
-		FROM [dbo].BTStatusHistoryCrossRef AS btshcr
-		GROUP BY btshcr.BTJobHistoryID
-	) AS latest_cross_ref
-	ON latest_job_history.BTJobHistoryID = latest_cross_ref.BTJobHistoryID
-	LEFT JOIN [dbo].BTStatusHistoryCrossRef AS btshcr
-	ON latest_cross_ref.BTStatusHistoryCrossRefID = btshcr.BTStatusHistoryCrossRefID
-	LEFT JOIN [dbo].AccessPointType AS apt
-	ON btshcr.AccessPointTypeID = apt.AccessPointTypeID
-) AS bt_job_source
-ON btj.BTJobID = bt_job_source.BTJobID*/
 LEFT JOIN
 (
 	SELECT
@@ -198,27 +165,6 @@ LEFT JOIN
 	ON btshcr.AccessPointTypeID = apt.AccessPointTypeID
 ) AS bt_job_source
 ON latest_cross_ref.BTStatusHistoryCrossRefID = bt_job_source.BTStatusHistoryCrossRefID
-
-/*INNER JOIN
-(
-	SELECT
-		btj.BTJobID AS BTJobID,
-		latest_isolation_type.IsolationType AS IsolationType
-	FROM [dbo].BTJob AS btj
-	LEFT JOIN
-	(
-		SELECT
-			l.LocationID AS LocationID,
-			it.Name AS IsolationType
-		FROM [dbo].Location AS l
-		INNER JOIN [dbo].BTLocation AS btl
-		ON l.LocationID = btl.LocationID
-		INNER JOIN [dbo].IsolationType it
-		ON btl.LastPatientIsolationTypeID = it.IsolationTypeID
-	) AS latest_isolation_type
-	ON btj.LocationID = latest_isolation_type.LocationID
-) AS isolation_type
-ON btj.BTJobID = isolation_type.BTJobID*/
 LEFT JOIN
 (
 	SELECT
@@ -231,54 +177,9 @@ LEFT JOIN
 ON location_info.LocationID = isolation_type.LocationID 
 INNER JOIN [dbo].EnterpriseUser eu
 ON btj.RequesterID = eu.EnterpriseUserID
-/*INNER JOIN
-(
-	SELECT
-		btj.BTJobID,
-		st.Name AS SpillCleanType
-	FROM [dbo].BTJob AS btj
-	LEFT JOIN [dbo].SpillType AS st
-	ON btj.CampusID = st.CampusID AND btj.SpillTypeID = st.SpillTypeID
-) AS spill_clean_type
-ON btj.BTJobID = spill_clean_type.BTJobID*/
 LEFT JOIN [dbo].SpillType AS spill_clean_type
 ON  btj.CampusID = spill_clean_type.CampusID 
 AND btj.SpillTypeID = spill_clean_type.SpillTypeID
-/*INNER JOIN
-(
-	SELECT
-		btj.BTJobID,
-		lsh.CurrentStatusTypeID AS CurrentStatusTypeID,
-		lst.Name AS CurrentStatusTypeName
-	FROM [dbo].BTJob btj
-	INNER JOIN
-	(
-		SELECT
-			btj.BTJobID AS BTJobID,
-			MAX(btjh.BTJobHistoryID) AS BTJobHistoryID
-		FROM [dbo].BTJob AS btj
-		INNER JOIN [dbo].BTJobHistory AS btjh
-		ON btj.BTJobID = btjh.BTJobID
-		GROUP BY btj.BTJobID
-	) AS latest_job_history
-	ON btj.BTJobID = latest_job_history.BTJobID
-	LEFT JOIN
-	(
-		SELECT 
-			btshcr.BTJobHistoryID AS BTJobHistoryID,
-			MAX(btshcr.BTStatusHistoryCrossRefID) AS BTStatusHistoryCrossRefID
-		FROM [dbo].BTStatusHistoryCrossRef AS btshcr
-		GROUP BY btshcr.BTJobHistoryID
-	) AS latest_cross_ref
-	ON latest_job_history.BTJobHistoryID = latest_cross_ref.BTJobHistoryID
-	LEFT JOIN [dbo].BTStatusHistoryCrossRef AS btshcr
-	ON latest_cross_ref.BTStatusHistoryCrossRefID = btshcr.BTStatusHistoryCrossRefID
-	LEFT JOIN [dbo].LocationStatusHistory lsh
-	ON btshcr.LocationStatusHistoryID = lsh.LocationStatusHistoryID
-	LEFT JOIN [dbo].LocationStatusType lst
-	ON lsh.CurrentStatusTypeID = lst.LocationStatusTypeID
-) AS udef
-ON btj.BTJobID = udef.BTJobID*/
 LEFT JOIN
 (
 	SELECT
@@ -292,25 +193,6 @@ LEFT JOIN
 	ON lsh.CurrentStatusTypeID = lst.LocationStatusTypeID
 )  AS udef
 ON latest_cross_ref.BTStatusHistoryCrossRefID = udef.BTStatusHistoryCrossRefID
-/*INNER JOIN
-(
-	SELECT
-		btj.BTJobID AS BTJobID,
-		d.DisciplineID AS DisciplineID,
-		d.Name AS DisciplineName
-	FROM [dbo].BTJob AS btj
-	INNER JOIN [dbo].Location AS l
-	ON btj.LocationID = l.LocationID
-	INNER JOIN [dbo].Room AS r
-	ON l.RoomID = r.RoomID
-	INNER JOIN [dbo].Unit AS u
-	ON r.UnitID = u.UnitID
-	INNER JOIN [dbo].PATUnitSetting AS pus
-	ON u.UnitID = pus.UnitID
-	INNER JOIN [dbo].Discipline AS d
-	ON pus.DisciplineID = d.DisciplineID
-) AS discipline
-ON btj.BTJobID = discipline.BTJobID*/
 INNER JOIN
 (
 	SELECT
@@ -322,47 +204,6 @@ INNER JOIN
 	ON pus.DisciplineID = d.DisciplineID
 ) AS discipline
 ON location_info.UnitID = discipline.UnitID
-/*INNER JOIN
-(
-	SELECT
-		btj.BTJobID AS BTJobID,
-		rc.CodeName AS ReasonCode,
-		CASE btshcr.BTStatusMappingTypeID
-			WHEN 9 THEN 'Next'
-			WHEN 14 THEN 'Stat'
-			WHEN 19 THEN 'Udef6'
-			WHEN 24 THEN 'Udef9'
-			WHEN 30 THEN 'Blocked'
-		END AS BTStatusMappingTypeName
-	FROM [dbo].BTJob btj
-	LEFT JOIN
-	(
-		SELECT
-			btj.BTJobID AS BTJobID,
-			MAX(btjh.BTJobHistoryID) AS BTJobHistoryID,
-			MAX(btjh.LastModDate) AS LastModDate
-		FROM [dbo].BTJob AS btj
-		INNER JOIN [dbo].BTJobHistory AS btjh
-		ON btj.BTJobID = btjh.BTJobID
-		GROUP BY btj.BTJobID
-	) AS latest_job_history
-	ON btj.BTJobID = latest_job_history.BTJobID
-	LEFT JOIN
-	(
-		SELECT 
-			btshcr.BTJobHistoryID AS BTJobHistoryID,
-			MAX(btshcr.BTStatusHistoryCrossRefID) AS BTStatusHistoryCrossRefID,
-			MAX(btshcr.LastModDate) AS LastModDate
-		FROM [dbo].BTStatusHistoryCrossRef AS btshcr
-		GROUP BY btshcr.BTJobHistoryID
-	) AS latest_cross_ref
-	ON latest_job_history.BTJobHistoryID = latest_cross_ref.BTJobHistoryID
-	LEFT JOIN [dbo].BTStatusHistoryCrossRef AS btshcr
-	ON latest_cross_ref.BTStatusHistoryCrossRefID = btshcr.BTStatusHistoryCrossRefID
-	LEFT JOIN [dbo].ReasonCode rc
-	ON btshcr.ReasonCodeID = rc.ReasonCodeID
-) AS blocked_bed_reason
-ON btj.BTJobID = blocked_bed_reason.BTJobID*/
 INNER JOIN
 (
 	SELECT
@@ -389,51 +230,6 @@ INNER JOIN
 	ON btjs.CompletedByUserID = eu.EnterpriseUserID
 ) AS completed_by_user
 ON btj.BTJobID = completed_by_user.BTJobID
-/*INNER JOIN
-(
-	SELECT
-		btj.BTJobID AS BTJobID,
-		btshcr.CreatedDate AS CreatedDate,
-		CASE btshcr.BTStatusMappingTypeID
-			WHEN 9 THEN 'Next'
-			WHEN 14 THEN 'Stat'
-			WHEN 19 THEN 'Udef8'
-			WHEN 24 THEN 'Udef9'
-			WHEN 30 THEN 'Blocked'
-		END AS BTStatusMappingTypeName,
-		CASE
-			WHEN btshcr.BTStatusMappingTypeID IN (9, 14, 19, 24, 30) THEN 1
-			ELSE 0
-		END AS IsUpgradedJob
-	FROM [dbo].BTJob AS btj
-	INNER JOIN
-	(
-		SELECT
-			btj.BTJobID AS BTJobID,
-			MAX(btjh.BTJobHistoryID) AS BTJobHistoryID,
-			MAX(btjh.LastModDate) AS LastModDate
-		FROM [dbo].BTJob AS btj
-		INNER JOIN [dbo].BTJobHistory AS btjh
-		ON btj.BTJobID = btjh.BTJobID
-		GROUP BY btj.BTJobID
-	) AS latest_job_history
-	ON btj.BTJobID = latest_job_history.BTJobID
-	LEFT JOIN [dbo].BTJobHistory AS btjh
-	ON latest_job_history.BTJobHistoryID = btjh.BTJobHistoryID
-	LEFT JOIN
-	(
-		SELECT 
-			btshcr.BTJobHistoryID AS BTJobHistoryID,
-			MAX(btshcr.BTStatusHistoryCrossRefID) AS BTStatusHistoryCrossRefID,
-			MAX(btshcr.LastModDate) AS LastModDate
-		FROM [dbo].BTStatusHistoryCrossRef AS btshcr
-		GROUP BY btshcr.BTJobHistoryID
-	) AS latest_cross_ref
-	ON latest_job_history.BTJobHistoryID = latest_cross_ref.BTJobHistoryID
-	LEFT JOIN [dbo].BTStatusHistoryCrossRef AS btshcr
-	ON latest_cross_ref.BTStatusHistoryCrossRefID = btshcr.BTStatusHistoryCrossRefID
-) AS last_upgrade_status
-ON btj.BTJobID = last_upgrade_status.BTJobID*/
 LEFT JOIN
 (
 	SELECT
@@ -456,26 +252,6 @@ LEFT JOIN
 ON latest_cross_ref.BTStatusHistoryCrossRefID = last_upgrade_status.BTStatusHistoryCrossRefID
 LEFT JOIN [dbo].ReasonCode AS blocked_bed_reason
 ON last_upgrade_status.ReasonCodeID = blocked_bed_reason.ReasonCodeID
-/*INNER JOIN
-(
-	SELECT
-		btj.BTJobID,
-		btjh.CurrentStatusStartDateTime AS InprogressTimestamp
-	FROM [dbo].BTJob AS btj
-	LEFT JOIN
-	(
-		SELECT
-			btjh.BTJobID AS BTJobID,
-			MAX(btjh.BTJobHistoryID) AS BTJobHistoryID
-		FROM [dbo].BTJobHistory AS btjh
-		WHERE btjh.CurrentStatusTypeID = 1
-		GROUP BY btjh.BTJobID
-	) AS inprogress_job_history
-	ON btj.BTJobID = inprogress_job_history.BTJobID
-	LEFT JOIN [dbo].BTJobHistory AS btjh
-	ON inprogress_job_history.BTJobHistoryID = btjh.BTJobHistoryID
-) AS inprogress_timestamp
-ON btj.BTJobID = inprogress_timestamp.BTJobID*/
 LEFT JOIN
 (	SELECT
 		btjh.BTJobID,
@@ -493,40 +269,6 @@ LEFT JOIN
 	ON btjh.BTJobHistoryID = inprogress_job_history.BTJobHistoryID
 ) AS inprogress_timestamp
 ON btj.BTJobID = inprogress_timestamp.BTJobID
-/*INNER JOIN
-(
-	SELECT
-		btj.BTJobID,
-		lst.[Name] AS InitialPriorityStatusType
-	FROM [dbo].BTJob AS btj
-	LEFT JOIN
-	(
-		SELECT
-			btjh.BTJobID AS BTJobID,
-			MIN(btjh.BTJobHistoryID) AS BTJobHistoryID
-		FROM [dbo].BTJobHistory AS btjh
-		GROUP BY btjh.BTJobID
-	) AS inital_job_history
-	ON btj.BTJobID = inital_job_history.BTJobID
-	LEFT JOIN [dbo].BTJobHistory AS btjh
-	ON inital_job_history.BTJobHistoryID = btjh.BTJobHistoryID
-	LEFT JOIN
-	(
-		SELECT
-			btshcr.BTJobHistoryID AS BTJobHistoryID,
-			MIN(btshcr.BTStatusHistoryCrossRefID) AS BTStatusHistoryCrossRefID
-		FROM [dbo].BTStatusHistoryCrossRef AS btshcr
-		GROUP BY btshcr.BTJobHistoryID
-	) AS inital_status_history_cross_ref
-	ON btjh.BTJobHistoryID = inital_status_history_cross_ref.BTJobHistoryID
-	LEFT JOIN [dbo].BTStatusHistoryCrossRef AS btshcr
-	ON inital_status_history_cross_ref.BTStatusHistoryCrossRefID = btshcr.BTStatusHistoryCrossRefID
-	LEFT JOIN [dbo].LocationStatusHistory AS lsh
-	ON btshcr.LocationStatusHistoryID = lsh.LocationStatusHistoryID
-	LEFT JOIN [dbo].LocationStatusType AS lst
-	ON lsh.CurrentStatusTypeID = lst.LocationStatusTypeID
-) AS initial_priority_status_type
-ON btj.BTJobID = initial_priority_status_type.BTJobID*/
 LEFT JOIN
 (
 	SELECT
@@ -541,39 +283,6 @@ LEFT JOIN
 ) AS initial_priority_status_type
 ON latest_cross_ref.MinBTStatusHistoryCrossRefID = initial_priority_status_type.BTStatusHistoryCrossRefID
 AND latest_job_history.MinBTJobHistoryID = initial_priority_status_type.BTJobHistoryID
-/*INNER JOIN
-(
-	SELECT
-		btj.BTJobID AS BTJobID,
-		rc.CodeName AS CancelledReason
-	FROM [dbo].BTJob AS btj
-	LEFT JOIN
-	(
-		SELECT
-			btjh.BTJobID AS BTJobID,
-			MAX(btjh.BTJobHistoryID) AS BTJobHistoryID
-		FROM [dbo].BTJobHistory AS btjh
-		WHERE btjh.CurrentStatusTypeID = 7
-		GROUP BY btjh.BTJobID
-	) AS first_job_history_delay
-	ON btj.BTJobID = first_job_history_delay.BTJobID
-	LEFT JOIN [dbo].BTJobHistory AS btjh
-	ON first_job_history_delay.BTJobHistoryID = btjh.BTJobHistoryID
-	LEFT JOIN
-	(
-		SELECT
-			btshcr.BTJobHistoryID AS BTJobHistoryID,
-			MAX(btshcr.BTStatusHistoryCrossRefID) AS BTStatusHistoryCrossRefID
-		FROM [dbo].BTStatusHistoryCrossRef AS btshcr
-		GROUP BY btshcr.BTJobHistoryID
-	) AS latest_cross_Ref
-	ON btjh.BTJobHistoryID = latest_cross_Ref.BTJobHistoryID
-	LEFT JOIN [dbo].BTStatusHistoryCrossRef AS btshcr
-	ON latest_cross_Ref.BTStatusHistoryCrossRefID = btshcr.BTStatusHistoryCrossRefID
-	LEFT JOIN [dbo].ReasonCode AS rc
-	ON btshcr.ReasonCodeID = rc.ReasonCodeID
-) AS cancelled_reason
-ON btj.BTJobID = cancelled_reason.BTJobID*/
 LEFT JOIN
 (	SELECT
 		btjh.BTJobID,
@@ -597,40 +306,6 @@ LEFT JOIN
 ) AS cancelled_reason
 ON btj.BTJobID = cancelled_reason.BTJobID
 AND latest_cross_Ref.BTStatusHistoryCrossRefID = cancelled_reason.BTStatusHistoryCrossRefID
-/*INNER JOIN
-(
-	SELECT
-		btj.BTJobID AS BTJobID,
-		btjh.CurrentStatusStartDateTime AS FirstDelayTimestamp,
-		rc.CodeName AS FirstDelayReason
-	FROM [dbo].BTJob AS btj
-	LEFT JOIN
-	(
-		SELECT
-			btjh.BTJobID AS BTJobID,
-			MIN(btjh.BTJobHistoryID) AS BTJobHistoryID
-		FROM [dbo].BTJobHistory AS btjh
-		WHERE btjh.CurrentStatusTypeID = 2
-		GROUP BY btjh.BTJobID
-	) AS first_job_history_delay
-	ON btj.BTJobID = first_job_history_delay.BTJobID
-	LEFT JOIN [dbo].BTJobHistory AS btjh
-	ON first_job_history_delay.BTJobHistoryID = btjh.BTJobHistoryID
-	LEFT JOIN
-	(
-		SELECT
-			btshcr.BTJobHistoryID AS BTJobHistoryID,
-			MAX(btshcr.BTStatusHistoryCrossRefID) AS BTStatusHistoryCrossRefID
-		FROM [dbo].BTStatusHistoryCrossRef AS btshcr
-		GROUP BY btshcr.BTJobHistoryID
-	) AS latest_cross_Ref
-	ON btjh.BTJobHistoryID = latest_cross_Ref.BTJobHistoryID
-	LEFT JOIN [dbo].BTStatusHistoryCrossRef AS btshcr
-	ON latest_cross_Ref.BTStatusHistoryCrossRefID = btshcr.BTStatusHistoryCrossRefID
-	LEFT JOIN [dbo].ReasonCode AS rc
-	ON btshcr.ReasonCodeID = rc.ReasonCodeID
-) AS first_delay_reason
-ON btj.BTJobID = first_delay_reason.BTJobID*/
 LEFT JOIN
 (	SELECT
 		btjh.BTJobID,
@@ -664,40 +339,6 @@ LEFT JOIN
 ) AS first_delay_reason
 ON btj.BTJobID = first_delay_reason.BTJobID
 AND latest_cross_Ref.BTStatusHistoryCrossRefID = first_delay_reason.BTStatusHistoryCrossRefID
-/*INNER JOIN
-(
-	SELECT
-		btj.BTJobID AS BTJobID,
-		btjh.CurrentStatusStartDateTime AS FirstSuspendedTimestamp,
-		rc.CodeName AS FirstSuspendedReason
-	FROM [dbo].BTJob AS btj
-	LEFT JOIN
-	(
-		SELECT
-			btjh.BTJobID AS BTJobID,
-			MIN(btjh.BTJobHistoryID) AS BTJobHistoryID
-		FROM [dbo].BTJobHistory AS btjh
-		WHERE btjh.CurrentStatusTypeID = 3
-		GROUP BY btjh.BTJobID
-	) AS first_job_history_delay
-	ON btj.BTJobID = first_job_history_delay.BTJobID
-	LEFT JOIN [dbo].BTJobHistory AS btjh
-	ON first_job_history_delay.BTJobHistoryID = btjh.BTJobHistoryID
-	LEFT JOIN
-	(
-		SELECT
-			btshcr.BTJobHistoryID AS BTJobHistoryID,
-			MAX(btshcr.BTStatusHistoryCrossRefID) AS BTStatusHistoryCrossRefID
-		FROM [dbo].BTStatusHistoryCrossRef AS btshcr
-		GROUP BY btshcr.BTJobHistoryID
-	) AS latest_cross_Ref
-	ON btjh.BTJobHistoryID = latest_cross_Ref.BTJobHistoryID
-	LEFT JOIN [dbo].BTStatusHistoryCrossRef AS btshcr
-	ON latest_cross_Ref.BTStatusHistoryCrossRefID = btshcr.BTStatusHistoryCrossRefID
-	LEFT JOIN [dbo].ReasonCode AS rc
-	ON btshcr.ReasonCodeID = rc.ReasonCodeID
-) AS first_suspended_reason
-ON btj.BTJobID = first_suspended_reason.BTJobID*/
 LEFT JOIN
 (	SELECT
 		btjh.BTJobID,
@@ -730,29 +371,6 @@ LEFT JOIN
 	ON btshcr.ReasonCodeID = rc.ReasonCodeID	
 ) AS first_suspended_reason
 ON btj.BTJobID = first_suspended_reason.BTJobID
-/*INNER JOIN
-(
-	SELECT
-		btj.BTJobID AS BTJobID,
-		ec.Name AS EmployeeCategoryName
-	FROM [dbo].BTJob AS btj
-	LEFT JOIN
-	(
-		SELECT
-			btjh.BTJobID AS BTJobID,
-			MAX(btjh.BTJobHistoryID) AS BTJobHistoryID
-		FROM [dbo].BTJobHistory AS btjh
-		GROUP BY btjh.BTJobID
-	) AS latest_job_history
-	ON btj.BTJobID = latest_job_history.BTJobID
-	LEFT JOIN [dbo].BTJobHistory AS btjh
-	ON latest_job_history.BTJobHistoryID = btjh.BTJobHistoryID
-	LEFT JOIN [dbo].EmployeeCategorySetting AS ecs
-	ON btjh.EnterpriseUserID = ecs.EnterpriseUserID
-	LEFT JOIN [dbo].EmployeeCategory AS ec
-	ON ecs.EmployeeCategoryID = ec.EmployeeCategoryID
-) AS employee_category
-ON btj.BTJobID = employee_category.BTJobID*/
 LEFT JOIN
 (
 	SELECT
