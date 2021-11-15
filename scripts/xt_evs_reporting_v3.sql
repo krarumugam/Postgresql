@@ -612,6 +612,7 @@ LEFT JOIN
 		WHERE btjh.CurrentStatusTypeID = 2
 		GROUP BY btjh.BTJobID
 	) AS first_job_history_delay
+	ON btjh.BTJobHistoryID = first_job_history_delay.BTJobHistoryID
 	INNER JOIN
 	(
 		SELECT
