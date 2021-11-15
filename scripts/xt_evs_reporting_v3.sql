@@ -137,7 +137,8 @@ LEFT JOIN
 	SELECT
 		btjh.BTJobID AS BTJobID,
 		MAX(btjh.BTJobHistoryID) AS BTJobHistoryID,
-		MAX(btjh.LastModDate) AS LastModDate
+		MAX(btjh.LastModDate) AS LastModDate,
+		MIN(btjh.BTJobHistoryID) AS MinBTJobHistoryID
 	FROM [dbo].BTJobHistory AS btjh
 	GROUP BY btjh.BTJobID
 ) AS latest_job_history
@@ -148,7 +149,8 @@ LEFT JOIN
 (
 	SELECT 
 		btshcr.BTJobHistoryID AS BTJobHistoryID,
-		MAX(btshcr.BTStatusHistoryCrossRefID) AS BTStatusHistoryCrossRefID
+		MAX(btshcr.BTStatusHistoryCrossRefID) AS BTStatusHistoryCrossRefID,
+		MIN(btshcr.BTStatusHistoryCrossRefID) AS MinBTStatusHistoryCrossRefID
 	FROM [dbo].BTStatusHistoryCrossRef AS btshcr
 	GROUP BY btshcr.BTJobHistoryID
 ) AS latest_cross_ref
@@ -456,7 +458,7 @@ LEFT JOIN
 	ON btjh.BTJobHistoryID = inprogress_job_history.BTJobHistoryID
 ) AS inprogress_timestamp
 ON btj.BTJobID = inprogress_timestamp.BTJobID
-INNER JOIN
+/*INNER JOIN
 (
 	SELECT
 		btj.BTJobID,
@@ -489,7 +491,21 @@ INNER JOIN
 	LEFT JOIN [dbo].LocationStatusType AS lst
 	ON lsh.CurrentStatusTypeID = lst.LocationStatusTypeID
 ) AS initial_priority_status_type
-ON btj.BTJobID = initial_priority_status_type.BTJobID
+ON btj.BTJobID = initial_priority_status_type.BTJobID*/
+LEFT JOIN
+(
+	SELECT
+		btshcr.BTJobHistoryID,
+		btshcr.BTStatusHistoryCrossRefID,
+		lst.[Name] AS InitialPriorityStatusType
+	FROM [dbo].BTStatusHistoryCrossRef AS btshcr
+	LEFT JOIN [dbo].LocationStatusHistory AS lsh
+		ON btshcr.LocationStatusHistoryID = lsh.LocationStatusHistoryID	
+	LEFT JOIN [dbo].LocationStatusType AS lst
+		ON lsh.CurrentStatusTypeID = lst.LocationStatusTypeID
+) AS initial_priority_status_type
+ON latest_cross_ref.MinBTStatusHistoryCrossRefID = initial_priority_status_type.BTStatusHistoryCrossRefID
+AND latest_job_history.MinBTJobHistoryID = initial_priority_status_type.BTJobHistoryID
 INNER JOIN
 (
 	SELECT
