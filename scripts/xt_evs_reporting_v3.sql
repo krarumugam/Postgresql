@@ -61,7 +61,7 @@ SELECT
 	END AS REQUESTER,
 	employee_category.EmployeeCategoryName AS EMPLOYEE_CATEGORY,
 	isolation_type.IsolationType AS ISOLATION_TYPE,
-	spill_clean_type.SpillCleanType AS SPILL_CLEAN_TYPE,
+	spill_clean_type.NAME AS SPILL_CLEAN_TYPE,
 	CASE
 		WHEN udef.CurrentStatusTypeName = 'Udef8' THEN 'Y'
 		ELSE 'N'
@@ -419,7 +419,7 @@ INNER JOIN
 	ON latest_cross_ref.BTStatusHistoryCrossRefID = btshcr.BTStatusHistoryCrossRefID
 ) AS last_upgrade_status
 ON btj.BTJobID = last_upgrade_status.BTJobID
-INNER JOIN
+/*INNER JOIN
 (
 	SELECT
 		btj.BTJobID,
@@ -438,16 +438,13 @@ INNER JOIN
 	LEFT JOIN [dbo].BTJobHistory AS btjh
 	ON inprogress_job_history.BTJobHistoryID = btjh.BTJobHistoryID
 ) AS inprogress_timestamp
-ON btj.BTJobID = inprogress_timestamp.BTJobID
-/* aru
+ON btj.BTJobID = inprogress_timestamp.BTJobID*/
 LEFT JOIN
-(
-	SELECT
+(	SELECT
 		btjh.BTJobID,
-		btjh.BTJobHistoryID,
 		btjh.CurrentStatusStartDateTime AS InprogressTimestamp
 	FROM [dbo].BTJobHistory AS btjh
-	LEFT JOIN
+	INNER JOIN
 	(
 		SELECT
 			btjh.BTJobID AS BTJobID,
@@ -456,9 +453,9 @@ LEFT JOIN
 		WHERE btjh.CurrentStatusTypeID = 1
 		GROUP BY btjh.BTJobID
 	) AS inprogress_job_history
-	ON inprogress_job_history.BTJobHistoryID = btjh.BTJobHistoryID
+	ON btjh.BTJobHistoryID = inprogress_job_history.BTJobHistoryID
 ) AS inprogress_timestamp
-ON btj.BTJobID = inprogress_timestamp.BTJobID aru*/
+ON btj.BTJobID = inprogress_timestamp.BTJobID
 INNER JOIN
 (
 	SELECT
