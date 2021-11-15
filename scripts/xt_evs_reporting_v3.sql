@@ -506,7 +506,7 @@ LEFT JOIN
 ) AS initial_priority_status_type
 ON latest_cross_ref.MinBTStatusHistoryCrossRefID = initial_priority_status_type.BTStatusHistoryCrossRefID
 AND latest_job_history.MinBTJobHistoryID = initial_priority_status_type.BTJobHistoryID
-INNER JOIN
+/*INNER JOIN
 (
 	SELECT
 		btj.BTJobID AS BTJobID,
@@ -538,8 +538,31 @@ INNER JOIN
 	LEFT JOIN [dbo].ReasonCode AS rc
 	ON btshcr.ReasonCodeID = rc.ReasonCodeID
 ) AS cancelled_reason
+ON btj.BTJobID = cancelled_reason.BTJobID*/
+LEFT JOIN
+(	SELECT
+		btjh.BTJobID,
+		rc.CodeName AS CancelledReason,
+		btshcr.BTStatusHistoryCrossRefID
+	FROM [dbo].BTJobHistory AS btjh
+	INNER JOIN
+	(
+		SELECT
+			btjh.BTJobID AS BTJobID,
+			MAX(btjh.BTJobHistoryID) AS BTJobHistoryID
+		FROM [dbo].BTJobHistory AS btjh
+		WHERE btjh.CurrentStatusTypeID = 7
+		GROUP BY btjh.BTJobID
+	) AS first_job_history_delay
+	ON btjh.BTJobHistoryID = first_job_history_delay.BTJobHistoryID
+	LEFT JOIN [dbo].BTStatusHistoryCrossRef AS btshcr
+	ON btjh.BTJobHistoryID = btshcr.BTJobHistoryID
+	LEFT JOIN [dbo].ReasonCode AS rc
+	ON btshcr.ReasonCodeID = rc.ReasonCodeID	
+) AS cancelled_reason
 ON btj.BTJobID = cancelled_reason.BTJobID
-INNER JOIN
+AND latest_cross_Ref.BTStatusHistoryCrossRefID = cancelled_reason.BTStatusHistoryCrossRefID
+/*INNER JOIN
 (
 	SELECT
 		btj.BTJobID AS BTJobID,
@@ -572,7 +595,31 @@ INNER JOIN
 	LEFT JOIN [dbo].ReasonCode AS rc
 	ON btshcr.ReasonCodeID = rc.ReasonCodeID
 ) AS first_delay_reason
+ON btj.BTJobID = first_delay_reason.BTJobID*/
+LEFT JOIN
+(	SELECT
+		btjh.BTJobID,
+		btjh.CurrentStatusStartDateTime AS FirstDelayTimestamp,
+		rc.CodeName AS FirstDelayReason,
+		btshcr.BTStatusHistoryCrossRefID
+	FROM [dbo].BTJobHistory AS btjh
+	INNER JOIN
+	(
+		SELECT
+			btjh.BTJobID AS BTJobID,
+			MIN(btjh.BTJobHistoryID) AS BTJobHistoryID
+		FROM [dbo].BTJobHistory AS btjh
+		WHERE btjh.CurrentStatusTypeID = 2
+		GROUP BY btjh.BTJobID
+	) AS first_job_history_delay
+	ON btjh.BTJobHistoryID = first_job_history_delay.BTJobHistoryID
+	LEFT JOIN [dbo].BTStatusHistoryCrossRef AS btshcr
+	ON btjh.BTJobHistoryID = btshcr.BTJobHistoryID
+	LEFT JOIN [dbo].ReasonCode AS rc
+	ON btshcr.ReasonCodeID = rc.ReasonCodeID	
+) AS first_delay_reason
 ON btj.BTJobID = first_delay_reason.BTJobID
+AND latest_cross_Ref.BTStatusHistoryCrossRefID = first_delay_reason.BTStatusHistoryCrossRefID
 INNER JOIN
 (
 	SELECT
