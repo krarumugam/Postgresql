@@ -229,7 +229,7 @@ LEFT JOIN
 ON location_info.LocationID = isolation_type.LocationID 
 INNER JOIN [dbo].EnterpriseUser eu
 ON btj.RequesterID = eu.EnterpriseUserID
-INNER JOIN
+/*INNER JOIN
 (
 	SELECT
 		btj.BTJobID,
@@ -238,7 +238,10 @@ INNER JOIN
 	LEFT JOIN [dbo].SpillType AS st
 	ON btj.CampusID = st.CampusID AND btj.SpillTypeID = st.SpillTypeID
 ) AS spill_clean_type
-ON btj.BTJobID = spill_clean_type.BTJobID
+ON btj.BTJobID = spill_clean_type.BTJobID*/
+LEFT JOIN [dbo].SpillType AS spill_clean_type
+ON  btj.CampusID = spill_clean_type.CampusID 
+AND btj.SpillTypeID = spill_clean_type.SpillTypeID
 INNER JOIN
 (
 	SELECT
