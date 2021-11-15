@@ -244,7 +244,7 @@ ON btj.BTJobID = spill_clean_type.BTJobID*/
 LEFT JOIN [dbo].SpillType AS spill_clean_type
 ON  btj.CampusID = spill_clean_type.CampusID 
 AND btj.SpillTypeID = spill_clean_type.SpillTypeID
-INNER JOIN
+/*INNER JOIN
 (
 	SELECT
 		btj.BTJobID,
@@ -278,7 +278,20 @@ INNER JOIN
 	LEFT JOIN [dbo].LocationStatusType lst
 	ON lsh.CurrentStatusTypeID = lst.LocationStatusTypeID
 ) AS udef
-ON btj.BTJobID = udef.BTJobID
+ON btj.BTJobID = udef.BTJobID*/
+LEFT JOIN
+(
+	SELECT
+		btshcr.BTStatusHistoryCrossRefID,
+		lsh.CurrentStatusTypeID AS CurrentStatusTypeID,
+		lst.Name AS CurrentStatusTypeName
+	FROM [dbo].BTStatusHistoryCrossRef AS btshcr
+	LEFT JOIN [dbo].LocationStatusHistory lsh
+	ON btshcr.LocationStatusHistoryID = lsh.LocationStatusHistoryID
+	LEFT JOIN [dbo].LocationStatusType lst
+	ON lsh.CurrentStatusTypeID = lst.LocationStatusTypeID
+)  AS udef
+ON latest_cross_ref.BTStatusHistoryCrossRefID = udef.BTStatusHistoryCrossRefID
 /*INNER JOIN
 (
 	SELECT
