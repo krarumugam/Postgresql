@@ -71,7 +71,7 @@ SELECT
 		ELSE 'N'
 	END AS UDEF9,
 	CASE
-		WHEN blocked_bed_reason.BTStatusMappingTypeName = 'Blocked' THEN blocked_bed_reason.ReasonCode
+		WHEN last_upgrade_status.BTStatusMappingTypeName = 'Blocked' THEN blocked_bed_reason.CodeName
 		ELSE NULL
 	END AS BLOCKED_BED_REASON,
 	CASE
@@ -322,7 +322,7 @@ INNER JOIN
 	ON pus.DisciplineID = d.DisciplineID
 ) AS discipline
 ON location_info.UnitID = discipline.UnitID
-INNER JOIN
+/*INNER JOIN
 (
 	SELECT
 		btj.BTJobID AS BTJobID,
@@ -362,7 +362,7 @@ INNER JOIN
 	LEFT JOIN [dbo].ReasonCode rc
 	ON btshcr.ReasonCodeID = rc.ReasonCodeID
 ) AS blocked_bed_reason
-ON btj.BTJobID = blocked_bed_reason.BTJobID
+ON btj.BTJobID = blocked_bed_reason.BTJobID*/
 INNER JOIN
 (
 	SELECT
@@ -389,7 +389,7 @@ INNER JOIN
 	ON btjs.CompletedByUserID = eu.EnterpriseUserID
 ) AS completed_by_user
 ON btj.BTJobID = completed_by_user.BTJobID
-INNER JOIN
+/*INNER JOIN
 (
 	SELECT
 		btj.BTJobID AS BTJobID,
@@ -433,7 +433,29 @@ INNER JOIN
 	LEFT JOIN [dbo].BTStatusHistoryCrossRef AS btshcr
 	ON latest_cross_ref.BTStatusHistoryCrossRefID = btshcr.BTStatusHistoryCrossRefID
 ) AS last_upgrade_status
-ON btj.BTJobID = last_upgrade_status.BTJobID
+ON btj.BTJobID = last_upgrade_status.BTJobID*/
+LEFT JOIN
+(
+	SELECT
+	    btshcr.BTStatusHistoryCrossRefID AS BTStatusHistoryCrossRefID,
+		btshcr.CreatedDate AS CreatedDate,
+		CASE btshcr.BTStatusMappingTypeID
+			WHEN 9 THEN 'Next'
+			WHEN 14 THEN 'Stat'
+			WHEN 19 THEN 'Udef8'
+			WHEN 24 THEN 'Udef9'
+			WHEN 30 THEN 'Blocked'
+		END AS BTStatusMappingTypeName,
+		CASE
+			WHEN btshcr.BTStatusMappingTypeID IN (9, 14, 19, 24, 30) THEN 1
+			ELSE 0
+		END AS IsUpgradedJob,
+		btshcr.ReasonCodeID AS ReasonCodeID
+	FROM [dbo].BTStatusHistoryCrossRef AS btshcr	
+) AS last_upgrade_status
+ON latest_cross_ref.BTStatusHistoryCrossRefID = last_upgrade_status.BTStatusHistoryCrossRefID
+LEFT JOIN [dbo].ReasonCode AS blocked_bed_reason
+ON last_upgrade_status.ReasonCodeID = blocked_bed_reason.ReasonCodeID
 /*INNER JOIN
 (
 	SELECT
